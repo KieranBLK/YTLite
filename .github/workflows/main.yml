@@ -3,7 +3,6 @@ name: Create YouTube Plus app
 on:
   workflow_dispatch:
     inputs:
-
       enable_youpip:
         description: "Integrate YouPiP"
         type: boolean
@@ -28,6 +27,18 @@ on:
         required: true
         default: true
 
+      enable_ytabc:
+        description: "Integrate YTABConfig"
+        type: boolean
+        required: true
+        default: true
+              
+      enable_ytpg:
+        description: "Integrate YTPlayerGestures"
+        type: boolean
+        required: true
+        default: true
+        
       enable_demc:
         description: "Integrate DontEatMyContent"
         type: boolean
@@ -51,18 +62,6 @@ on:
         default: "YouTube"
         required: true
         type: string
-
-      bundle_id:
-        description: "BundleID (Optional)"
-        default: "com.google.ios.youtube"
-        required: true
-        type: string
-
-      info_note:
-        description: "TIP: Learn more about integrations in the README via the link below"
-        default: "https://github.com/dayanch96/YTLite#tweak-integration-details"
-        type: string
-        required: false
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -185,7 +184,19 @@ jobs:
         run: |
           cd ${{ github.workspace }}
           git clone --quiet --depth=1 https://github.com/PoomSmart/YouPiP.git
+          
+      - name: Clone YTABConfig
+        if: ${{ inputs.enable_ytabc }}
+        run: |
+          cd ${{ github.workspace }}
+          git clone --quiet --depth=1 https://github.com/PoomSmart/YTABConfig.git
 
+      - name: Clone YTPlayerGestures
+        if: ${{ inputs.enable_ytpg }}
+        run: |
+          cd ${{ github.workspace }}
+          git clone --quiet --depth=1 https://github.com/KieranBLK/YTPlayerGestures.git
+          
       - name: Clone YTUHD
         if: ${{ inputs.enable_ytuhd }}
         run: |
@@ -230,7 +241,25 @@ jobs:
           mv packages/*.deb ${{ github.workspace }}/youpip.deb
         env:
           THEOS: ${{ github.workspace }}/theos
+          
+      - name: Build YTABConfig
+        if: ${{ inputs.enable_ytabc }}
+        run: |
+          cd ${{ github.workspace }}/YTABConfig
+          make clean package DEBUG=0 FINALPACKAGE=1
+          mv packages/*.deb ${{ github.workspace }}/ytabc.deb
+        env:
+          THEOS: ${{ github.workspace }}/theos
 
+      - name: Build YTPlayerGestures
+        if: ${{ inputs.enable_ytpg }}
+        run: |
+          cd ${{ github.workspace }}/YTPlayerGestures
+          make clean package DEBUG=0 FINALPACKAGE=1
+          mv packages/*.deb ${{ github.workspace }}/ytpg.deb
+        env:
+          THEOS: ${{ github.workspace }}/theos
+          
       - name: Build YTUHD
         if: ${{ inputs.enable_ytuhd }}
         run: |
@@ -289,12 +318,12 @@ jobs:
         run: |
           tweaks="ytplus.deb OpenYoutubeSafariExtension.appex"
 
-          for deb in youpip.deb ytuhd.deb ryd.deb ygs.deb yq.deb ytvo.deb demc.deb; do
+          for deb in youpip.deb ytabc.deb ytpg.deb ytuhd.deb ryd.deb ygs.deb yq.deb ytvo.deb demc.deb; do
             if [ -f "$deb" ]; then
               tweaks="$tweaks $deb"
             fi
           done
-
+          
           cyan -i youtube.ipa -o YouTubePlus_${{ inputs.tweak_version }}.ipa -uwef $tweaks -n "${{ inputs.display_name }}" -b ${{ inputs.bundle_id }}
 
       - name: Upload to GitHub Releases
