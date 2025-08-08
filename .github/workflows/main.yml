@@ -15,6 +15,12 @@ on:
         type: boolean
         required: true
         default: false
+  
+      enable_ytabc:
+        description: "Integrate YTABC"
+        type: boolean
+        required: true
+        default: false
 
       enable_yq:
         description: "Integrate YouQuality"
@@ -57,12 +63,6 @@ on:
         default: "com.google.ios.youtube"
         required: true
         type: string
-
-      info_note:
-        description: "TIP: Learn more about integrations in the README via the link below"
-        default: "https://github.com/dayanch96/YTLite#tweak-integration-details"
-        type: string
-        required: false
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -202,6 +202,14 @@ jobs:
           ref: 0f59b38817d554ab692a0053456319847a6ab1a1
           path: ${{ github.workspace }}/YTUHD
 
+      - name: Clone YTABC
+        if: ${{ inputs.enable_ytabc }}
+        uses: actions/checkout@v4.1.7
+        with:
+          repository: PoomSmart/YTABC
+          ref: 0f59b38817d554ab692a0053456319847a6ab1a1
+          path: ${{ github.workspace }}/YTABC
+          
       - name: Clone Return-YouTube-Dislikes
         if: ${{ inputs.enable_ryd }}
         run: |
@@ -250,6 +258,15 @@ jobs:
         env:
           THEOS: ${{ github.workspace }}/theos
 
+      - name: Build YTABC
+        if: ${{ inputs.enable_ytabc}}
+        run: |
+          cd ${{ github.workspace }}/YTABC
+          make clean package DEBUG=0 FINALPACKAGE=1
+          mv packages/*.deb ${{ github.workspace }}/ytabc.deb
+        env:
+          THEOS: ${{ github.workspace }}/theos
+          
       - name: Build Return-YouTube-Dislikes
         if: ${{ inputs.enable_ryd }}
         run: |
