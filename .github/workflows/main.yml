@@ -17,7 +17,7 @@ on:
         default: true
      
       enable_ytabc:
-        description: "Integrate YTUHD"
+        description: "Integrate YTABC"
         type: boolean
         required: true
         default: true
